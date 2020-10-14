@@ -1,7 +1,6 @@
 <template>
   <div class="app-container">
     <div class="filter-container">
-      <!--<el-input v-model="listQuery.name" placeholder="Server 名称" style="width: 200px;" class="filter-item" />-->
       <el-select v-model="listQuery.clusterId" placeholder="所属集群" class="filter-item">
         <el-option key="" label="所属集群" value="" />
         <el-option key="-1" label="单机" value="-1" />
@@ -27,7 +26,6 @@
           </span>
           <span v-else>-</span>
         </template>
-<!--        todo-->
       </el-table-column>
       <el-table-column label="Client 名称" min-width="200" align="center">
         <template slot-scope="scope">
@@ -44,12 +42,6 @@
           <span>{{ scope.row.port }}</span>
         </template>
       </el-table-column>
-      <el-table-column class-name="status-col" label="状态" min-width="150" align="center">
-<!--        <template slot-scope="scope">-->
-<!--          <el-tag :type="scope.row.status | statusFilter">{{ scope.row.status | statusLabel }}</el-tag>-->
-<!--        </template>-->
-        todo
-      </el-table-column>
       <el-table-column align="center" prop="created_at" label="操作" min-width="150">
         <template slot-scope="scope">
           <el-dropdown trigger="click">
@@ -60,8 +52,6 @@
               <el-dropdown-item @click.native="handleConfig(scope.row)">配置</el-dropdown-item>
               <el-dropdown-item @click.native="handleUpdate(scope.row)">修改</el-dropdown-item>
               <el-dropdown-item @click.native="handleDelete(scope.row)">删除</el-dropdown-item>
-<!--              <el-dropdown-item @click.native="handleStart(scope.row)">启动</el-dropdown-item>-->
-<!--              <el-dropdown-item @click.native="handleStop(scope.row)">停止</el-dropdown-item>-->
               <el-dropdown-item @click.native="handleInstances(scope.row)">详情</el-dropdown-item>
               <el-dropdown-item @click.native="handleLog(scope.row)">日志</el-dropdown-item>
             </el-dropdown-menu>

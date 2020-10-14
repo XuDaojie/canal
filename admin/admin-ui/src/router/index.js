@@ -147,7 +147,7 @@ export const constantRoutes = [
       },
       {
         path: 'nodeClients',
-        name: 'Server 状态',
+        name: 'Client 状态',
         component: () => import('@/views/canalClient/NodeClient'),
         meta: { title: 'Client 管理', icon: 'form' }
       },
@@ -173,14 +173,14 @@ export const constantRoutes = [
       },
       {
         path: 'canalAdapter/modify',
-        name: '修改Instance配置',
+        name: '修改Adapter配置',
         component: () => import('@/views/canalClient/CanalAdapterUpdate'),
-        meta: { title: '修改Instance配置' },
+        meta: { title: '修改Adapter配置' },
         hidden: true
       },
       {
         path: 'nodeClient/log',
-        name: 'Server 日志',
+        name: 'Client 日志',
         component: () => import('@/views/canalClient/CanalClientLogDetail'),
         meta: { title: 'Client 日志' },
         hidden: true
