@@ -132,6 +132,62 @@ export const constantRoutes = [
     ]
   },
 
+  {
+    path: '/canalClient',
+    component: Layout,
+    redirect: '/canalClient/nodeClients',
+    name: 'Canal Client',
+    meta: { title: 'Canal Client', icon: 'example' },
+    children: [
+      {
+        path: 'canalClusters',
+        name: 'Canal 集群管理',
+        component: () => import('@/views/canalClient/CanalCluster'),
+        meta: { title: '集群管理', icon: 'tree' }
+      },
+      {
+        path: 'nodeClients',
+        name: 'Server 状态',
+        component: () => import('@/views/canalClient/NodeClient'),
+        meta: { title: 'Client 管理', icon: 'form' }
+      },
+      {
+        path: 'canalClient/config',
+        name: 'Server 配置',
+        component: () => import('@/views/canalClient/CanalConfig'),
+        meta: { title: 'Server 配置' },
+        hidden: true
+      },
+      {
+        path: 'canalAdapters',
+        name: 'Adapter 管理',
+        component: () => import('@/views/canalClient/CanalAdapter'),
+        meta: { title: 'Adapter 管理', icon: 'nested' }
+      },
+      {
+        path: 'canalAdapter/add',
+        name: '新建Adapter配置',
+        component: () => import('@/views/canalClient/CanalAdapterAdd'),
+        meta: { title: '新建Adapter配置' },
+        hidden: true
+      },
+      {
+        path: 'canalAdapter/modify',
+        name: '修改Instance配置',
+        component: () => import('@/views/canalClient/CanalAdapterUpdate'),
+        meta: { title: '修改Instance配置' },
+        hidden: true
+      },
+      {
+        path: 'nodeClient/log',
+        name: 'Server 日志',
+        component: () => import('@/views/canalClient/CanalClientLogDetail'),
+        meta: { title: 'Client 日志' },
+        hidden: true
+      }
+    ]
+  },
+
   // 404 page must be placed at the end !!!
   { path: '*', redirect: '/404', hidden: true }
 ]

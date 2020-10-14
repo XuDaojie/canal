@@ -1,17 +1,19 @@
 package com.alibaba.otter.canal.admin.controller;
 
+import com.alibaba.otter.canal.admin.common.TemplateConfigLoader;
+import com.alibaba.otter.canal.admin.model.BaseModel;
+import com.alibaba.otter.canal.admin.model.CanalConfig;
+import com.alibaba.otter.canal.admin.model.Pager;
+import com.alibaba.otter.canal.admin.service.CanalConfigService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.alibaba.otter.canal.admin.common.TemplateConfigLoader;
-import com.alibaba.otter.canal.admin.model.BaseModel;
-import com.alibaba.otter.canal.admin.model.CanalConfig;
-import com.alibaba.otter.canal.admin.service.CanalConfigService;
 
 /**
  * Canal主配置管理控制层
@@ -39,6 +41,32 @@ public class CanalConfigController {
     }
 
     /**
+     * 新增配置信息
+     *
+     * @param env 环境变量
+     * @return 配置信息
+     */
+    @PostMapping(value = "/config")
+    public BaseModel<String> save(@RequestBody CanalConfig canalConfig,
+                                              @PathVariable String env) {
+        canalConfigService.save(canalConfig);
+        return BaseModel.getInstance("success");
+    }
+
+    /**
+     * 获取canal-client配置列表
+     *
+     * @param env 环境变量
+     * @return 配置信息
+     */
+    @GetMapping(value = "/configs/client")
+    public BaseModel<Pager<?>> canalClientConfig(CanalConfig canalConfig,
+                                                Pager<CanalConfig> pager,
+                                                @PathVariable String env) {
+        return BaseModel.getInstance(canalConfigService.findClientList(pager));
+    }
+
+    /**
      * 修改配置
      *
      * @param canalConfig 配置信息对象
@@ -54,5 +82,10 @@ public class CanalConfigController {
     @GetMapping(value = "/config/template")
     public BaseModel<String> template(@PathVariable String env) {
         return BaseModel.getInstance(TemplateConfigLoader.loadCanalConfig());
+    }
+
+    @GetMapping(value = "/config/client/template")
+    public BaseModel<String> clientTemplate(@PathVariable String env) {
+        return BaseModel.getInstance(TemplateConfigLoader.loadCanalClientConfig());
     }
 }

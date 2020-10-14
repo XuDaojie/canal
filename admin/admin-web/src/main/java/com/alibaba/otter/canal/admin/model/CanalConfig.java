@@ -1,12 +1,12 @@
 package com.alibaba.otter.canal.admin.model;
 
-import io.ebean.Finder;
-import io.ebean.annotation.WhenModified;
-
 import java.util.Date;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
+
+import io.ebean.Finder;
+import io.ebean.annotation.WhenModified;
 
 /**
  * Canal主配置实体类
@@ -16,6 +16,9 @@ import javax.persistence.Id;
  */
 @Entity
 public class CanalConfig extends Model {
+
+    public static final String SERVER = "canal.properties";
+    public static final String CLIENT = "application.yml";
 
     public static final CanalConfigFinder find = new CanalConfigFinder();
 
@@ -42,7 +45,7 @@ public class CanalConfig extends Model {
     private Date   modifiedTime;
 
     public void init() {
-        this.name = "canal.properties";
+//        this.name = "canal.properties";
     }
 
     public Long getId() {

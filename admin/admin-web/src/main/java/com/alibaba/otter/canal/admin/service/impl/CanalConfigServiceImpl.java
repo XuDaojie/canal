@@ -1,9 +1,11 @@
 package com.alibaba.otter.canal.admin.service.impl;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.security.NoSuchAlgorithmException;
-import java.util.Date;
+import com.alibaba.otter.canal.admin.common.exception.ServiceException;
+import com.alibaba.otter.canal.admin.model.CanalConfig;
+import com.alibaba.otter.canal.admin.model.NodeServer;
+import com.alibaba.otter.canal.admin.model.Pager;
+import com.alibaba.otter.canal.admin.service.CanalConfigService;
+import com.alibaba.otter.canal.protocol.SecurityUtil;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
@@ -11,11 +13,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import com.alibaba.otter.canal.admin.common.exception.ServiceException;
-import com.alibaba.otter.canal.admin.model.CanalConfig;
-import com.alibaba.otter.canal.admin.model.NodeServer;
-import com.alibaba.otter.canal.admin.service.CanalConfigService;
-import com.alibaba.otter.canal.protocol.SecurityUtil;
+import java.io.IOException;
+import java.io.InputStream;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 /**
  * Canal配置信息业务层
@@ -30,6 +33,17 @@ public class CanalConfigServiceImpl implements CanalConfigService {
 
     private static final String CANAL_GLOBAL_CONFIG  = "canal.properties";
     private static final String CANAL_ADAPTER_CONFIG = "application.yml";
+
+    @Override
+    public void save(CanalConfig canalConfig) {
+        try {
+            String contentMd5 = SecurityUtil.md5String(canalConfig.getContent());
+            canalConfig.setContentMd5(contentMd5);
+        } catch (NoSuchAlgorithmException e) {
+            // ignore
+        }
+        canalConfig.save();
+    }
 
     public CanalConfig getCanalConfig(Long clusterId, Long serverId) {
         CanalConfig config = null;
@@ -58,6 +72,25 @@ public class CanalConfigServiceImpl implements CanalConfigService {
         return config;
     }
 
+    @Override
+    public CanalConfig getCanalConfig(Long id) {
+        return null;
+    }
+
+    @Override
+    public Pager<CanalConfig> findClientList(Pager<CanalConfig> pager) {
+        // canal-client 远程配置表目前固定为canal-config id=2的行
+        CanalConfig clientConfig = getClientConfig();
+        if (clientConfig != null) {
+            List<CanalConfig> clientConfigs = new ArrayList<>();
+            clientConfigs.add(clientConfig);
+            pager.setItems(clientConfigs);
+            pager.setCount(1L);
+        }
+
+        return pager;
+    }
+
     public CanalConfig getCanalConfigSummary() {
         return CanalConfig.find.query()
             .setDisableLazyLoading(true)
@@ -67,7 +100,7 @@ public class CanalConfigServiceImpl implements CanalConfigService {
             .findOne();
     }
 
-    public CanalConfig getAdapterConfig() {
+    public CanalConfig getClientConfig() {
         long id = 2L;
         CanalConfig config = CanalConfig.find.byId(id);
         if (config == null) {
@@ -101,6 +134,7 @@ public class CanalConfigServiceImpl implements CanalConfigService {
             }
             canalConfig.update("serverId", "content", "contentMd5");
         } else {
+            canalConfig.setName(CanalConfig.SERVER);
             canalConfig.save();
         }
     }

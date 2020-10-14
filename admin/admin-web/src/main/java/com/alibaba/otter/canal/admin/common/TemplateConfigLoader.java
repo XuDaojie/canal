@@ -1,5 +1,8 @@
 package com.alibaba.otter.canal.admin.common;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -7,15 +10,13 @@ import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class TemplateConfigLoader {
 
     private static final Logger logger              = LoggerFactory.getLogger(TemplateConfigLoader.class);
 
     public static final String  CONF_DIR            = "conf";
     public static final String  CANAL_CONFIG_TMP    = "canal-template.properties";
+    public static final String  CANAL_CLIENT_CONFIG_TMP    = "canal-client-template.yml";
     public static final String  INSTANCE_CONFIG_TMP = "instance-template.properties";
 
     public static String loadCanalConfig() {
@@ -24,6 +25,15 @@ public class TemplateConfigLoader {
 
     public static String loadInstanceConfig() {
         return loadFile(INSTANCE_CONFIG_TMP);
+    }
+
+    public static String loadCanalClientConfig() {
+        return loadFile(CANAL_CLIENT_CONFIG_TMP);
+    }
+
+    public static String loadAdapterConfig(String category) {
+        String fileName = "canal-adapter-" + category + "-template.yml";
+        return loadFile(fileName);
     }
 
     private static String loadFile(String fileName) {

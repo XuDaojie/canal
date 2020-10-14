@@ -108,3 +108,15 @@ INSERT INTO `canal_user` VALUES (1, 'admin', '6BB4837EB74329105EE4568DDA7DC67ED2
 COMMIT;
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+-- 1.1.5 2020-10-08
+CREATE TABLE `canal_node_client` (
+    `id` bigint(20) NOT NULL AUTO_INCREMENT,
+    `cluster_id` bigint(20) DEFAULT NULL,
+    `name` varchar(63) NOT NULL,
+    `ip` varchar(63) NOT NULL,
+    `port` int(11) DEFAULT NULL,
+    `status` varchar(45) DEFAULT NULL,
+    `modified_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;

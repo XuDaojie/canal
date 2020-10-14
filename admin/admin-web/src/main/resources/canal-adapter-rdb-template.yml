@@ -1,0 +1,17 @@
+dataSourceKey: defaultDS        # 源数据源的key, 对应上面配置的srcDataSources中的值
+destination: example            # cannal的instance或者MQ的topic
+outerAdapterKey: oracle1        # adapter key, 对应上面配置outAdapters中的key
+concurrent: true                # 是否按主键hase并行同步, 并行同步的表必须保证主键不会更改及主键不能为其他同步表的外键!!
+dbMapping:
+  database: mytest              # 源数据源的database/shcema
+  table: user                   # 源数据源表名
+  targetTable: mytest.tb_user   # 目标数据源的库名.表名
+  targetPk:                     # 主键映射
+    id: id                      # 如果是复合主键可以换行映射多个
+  #  mapAll: true                 # 是否整表映射, 要求源表和目标表字段名一模一样 (如果targetColumns也配置了映射,则以targetColumns配置为准)
+  targetColumns:                # 字段映射, 格式: 目标表字段: 源表字段, 如果字段名一样源表字段名可不填
+    id:
+    name:
+    role_id:
+    c_time:
+    test1:
