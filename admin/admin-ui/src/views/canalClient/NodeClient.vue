@@ -138,11 +138,9 @@
 </template>
 
 <script>
-// import { addNodeServer, getNodeServers, updateNodeServer, deleteNodeServer, startNodeServer, stopNodeServer } from '@/api/nodeServer'
-import { addNodeServer, updateNodeServer, deleteNodeServer, startNodeServer, stopNodeServer } from '@/api/canalConfig'
+import { startNodeServer, stopNodeServer } from '@/api/canalConfig'
 import { addNodeClient, getNodeClients, updateNodeClient, deleteNodeClient } from '@/api/nodeClient'
 import { getInstances, stopInstance, startInstance } from '@/api/canalClientInstance'
-// import { getActiveInstances, stopInstance, startInstance } from '@/api/canalInstance'
 import { getCanalClusters } from '@/api/canalCluster'
 import Pagination from '@/components/Pagination'
 
@@ -299,7 +297,7 @@ export default {
         this.$message({ message: '集群模式Server不允许单独变更配置，请在集群配置变更', type: 'error' })
         return
       }
-      this.$router.push('/canalServer/nodeServer/config?serverId=' + row.id)
+      this.$router.push('/canalClient/nodeClient/config?serverId=' + row.id)
     },
     handleUpdate(row) {
       this.resetModel()

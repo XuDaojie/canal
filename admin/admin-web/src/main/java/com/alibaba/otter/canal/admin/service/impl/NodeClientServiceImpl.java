@@ -17,10 +17,6 @@ import java.text.MessageFormat;
 import java.util.List;
 import java.util.Map;
 
-import feign.Feign;
-import feign.form.FormEncoder;
-import feign.jackson.JacksonDecoder;
-import feign.jackson.JacksonEncoder;
 import io.ebean.Query;
 
 /**
@@ -153,14 +149,11 @@ public class NodeClientServiceImpl implements NodeClientService {
     @Override
     public String remoteCanalLog(Long id) {
         NodeClient nodeClient = NodeClient.find.byId(id);
-        // todo 缓存api
-        ClientAdapterApi api = Feign.builder()
-                .encoder(new FormEncoder(new JacksonEncoder()))
-                .decoder(new JacksonDecoder())
-                .target(ClientAdapterApi.class,
-                        MessageFormat.format("http://{0}:{1}", nodeClient.getIp(), nodeClient.getPort()));
-        Map canalLog = api.canalLog(100);
-        return canalLog.toString();
+
+        String url = MessageFormat.format("http://{0}:{1}", nodeClient.getIp(), nodeClient.getPort());
+        ClientAdapterApi api =ClientAdapterApi.apis.get(url);
+        Map<String, Object> canalLog = api.canalLog(100);
+        return String.valueOf(canalLog.get("data"));
     }
 
     @Override

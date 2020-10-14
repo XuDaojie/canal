@@ -1,10 +1,19 @@
 package com.alibaba.otter.canal.admin.rest;
 
+import com.google.common.base.Function;
+import com.google.common.collect.MigrateMap;
+
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
+import feign.Feign;
 import feign.Param;
 import feign.RequestLine;
+import feign.form.FormEncoder;
+import feign.jackson.JacksonDecoder;
+import feign.jackson.JacksonEncoder;
 
 /**
  * @author XuDaojie
@@ -12,6 +21,20 @@ import feign.RequestLine;
  * @since 1.1.5
  */
 public interface ClientAdapterApi {
+
+    /**
+     * key: url
+     */
+    Map<String, ClientAdapterApi> apis = MigrateMap.makeComputingMap(new Function<String, ClientAdapterApi>() {
+        @Nullable
+        @Override
+        public ClientAdapterApi apply(@Nullable String url) {
+            return Feign.builder()
+                    .encoder(new FormEncoder(new JacksonEncoder()))
+                    .decoder(new JacksonDecoder())
+                    .target(ClientAdapterApi.class, url);
+        }
+    });
 
     /**
      * 查询所有订阅同步的canal destination或MQ topic

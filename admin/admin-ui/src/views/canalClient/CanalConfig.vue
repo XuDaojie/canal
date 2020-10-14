@@ -16,7 +16,7 @@
 </template>
 
 <script>
-import { getCanalConfig, updateCanalConfig, getTemplateConfig } from '@/api/canalConfig'
+import { getCanalConfig, updateCanalConfig, getClientTemplateConfig } from '@/api/canalConfig'
 
 export default {
   components: {
@@ -104,7 +104,7 @@ export default {
       history.go(-1)
     },
     onLoadTemplate() {
-      getTemplateConfig().then(res => {
+      getClientTemplateConfig().then(res => {
         this.form.content = res.data
       })
     }

@@ -152,10 +152,10 @@ export const constantRoutes = [
         meta: { title: 'Client 管理', icon: 'form' }
       },
       {
-        path: 'canalClient/config',
-        name: 'Server 配置',
+        path: 'nodeClient/config',
+        name: 'Client 配置',
         component: () => import('@/views/canalClient/CanalConfig'),
-        meta: { title: 'Server 配置' },
+        meta: { title: 'Client 配置' },
         hidden: true
       },
       {

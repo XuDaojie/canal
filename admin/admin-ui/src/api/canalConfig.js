@@ -21,3 +21,10 @@ export function getTemplateConfig() {
     method: 'get'
   })
 }
+
+export function getClientTemplateConfig() {
+  return request({
+    url: '/canal/config/client/template',
+    method: 'get'
+  })
+}
