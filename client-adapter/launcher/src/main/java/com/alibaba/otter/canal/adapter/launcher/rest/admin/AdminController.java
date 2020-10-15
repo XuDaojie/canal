@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class AdminController {
 
-    // todo
-    @GetMapping("/canal/log")
+
+    @GetMapping("/canalClient/log")
     public Result canalLog(int lines) {
         String log = FileUtils.readFileFromOffset("../logs/adapter/adapter.log", lines, "UTF-8");
         Result result = Result.createSuccess("success");

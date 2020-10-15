@@ -15,6 +15,22 @@
       fit
       highlight-current-row
     >
+      <el-table-column label="所属集群" min-width="200" align="center">
+        <template slot-scope="scope">
+          <span v-if="scope.row.nodeClient !== null && scope.row.nodeClient.canalCluster != null">
+            {{ scope.row.nodeClient.canalCluster.name }}
+          </span>
+          <span v-else>-</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="所属主机" min-width="200" align="center">
+        <template slot-scope="scope">
+          <span v-if="scope.row.nodeClient !== null">
+            {{ scope.row.nodeClient.name }}
+          </span>
+          <span v-else>-</span>
+        </template>
+      </el-table-column>
       <el-table-column label="Adapter 名称" min-width="200" align="center">
         <template slot-scope="scope">
           {{ scope.row.name }}
@@ -46,44 +62,22 @@
             <el-dropdown-menu slot="dropdown">
               <el-dropdown-item @click.native="handleUpdate(scope.row)">修改</el-dropdown-item>
               <el-dropdown-item @click.native="handleDelete(scope.row)">删除</el-dropdown-item>
-              <el-dropdown-item @click.native="handleStart(scope.row)">启动</el-dropdown-item>
-              <el-dropdown-item @click.native="handleStop(scope.row)">停止</el-dropdown-item>
-              <el-dropdown-item @click.native="handleLog(scope.row)">日志</el-dropdown-item>
+              <el-dropdown-item disabled @click.native="handleStart(scope.row)">启动</el-dropdown-item>
+              <el-dropdown-item disabled @click.native="handleStop(scope.row)">停止</el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>
         </template>
       </el-table-column>
     </el-table>
     <pagination v-show="count>0" :total="count" :page.sync="listQuery.page" :limit.sync="listQuery.size" @pagination="fetchData()" />
-<!--    <el-dialog :visible.sync="dialogFormVisible" :title="textMap[dialogStatus]" width="600px">-->
-<!--      <el-form ref="dataForm" :rules="rules" :model="nodeModel" label-position="left" label-width="120px" style="width: 400px; margin-left:30px;">-->
-<!--        <el-form-item label="Adapter 种类" prop="clusterId">-->
-<!--          <el-select v-if="dialogStatus === 'create'" v-model="nodeModel.clusterId" placeholder="选择Adapter">-->
-<!--            <el-option key="" label="单机" value="" />-->
-<!--            <el-option v-for="item in canalClusters" :key="item.id" :label="item.name" :value="item.id" />-->
-<!--          </el-select>-->
-<!--          <el-select v-else v-model="nodeModel.clusterId" placeholder="选择所属集群" disabled="disabled">-->
-<!--            <el-option key="" label="单机" value="" />-->
-<!--            <el-option v-for="item in canalClusters" :key="item.id" :label="item.name" :value="item.id" />-->
-<!--          </el-select>-->
-<!--        </el-form-item>-->
-<!--        <el-form-item label="Server 名称" prop="name">-->
-<!--          <el-input v-model="nodeModel.name" />-->
-<!--        </el-form-item>-->
-<!--      </el-form>-->
-<!--      <div slot="footer" class="dialog-footer">-->
-<!--        <el-button @click="dialogFormVisible = false">取消</el-button>-->
-<!--        <el-button type="primary" @click="dataOperation()">确定</el-button>-->
-<!--      </div>-->
-<!--    </el-dialog>-->
   </div>
 </template>
 
 <script>
-import { getCanalAdapters, deleteCanalInstance, instanceStatus } from '@/api/canalAdapter'
+import { getCanalAdapters, instanceStatus } from '@/api/canalAdapter'
 import Pagination from '@/components/Pagination'
 import { getClustersAndServers } from '@/api/canalCluster'
-import {deleteCanalAdapter} from "../../api/canalAdapter";
+import { deleteCanalAdapter } from '@/api/canalAdapter'
 
 export default {
   components: { Pagination },
@@ -221,13 +215,6 @@ export default {
           }
         })
       })
-    },
-    handleLog(row) {
-      if (row.nodeId === null) {
-        this.$message({ message: '当前Instance不是启动状态，无法查看日志', type: 'warning' })
-        return
-      }
-      this.$router.push('canalInstance/log?id=' + row.id + '&nodeId=' + row.nodeServer.id)
     }
   }
 }

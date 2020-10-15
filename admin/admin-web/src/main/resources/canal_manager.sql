@@ -109,7 +109,10 @@ COMMIT;
 
 SET FOREIGN_KEY_CHECKS = 1;
 
--- 1.1.5 2020-10-08
+-- ----------------------------
+-- 1.1.5
+-- ----------------------------
+-- 2020-10-08
 CREATE TABLE `canal_node_client` (
     `id` bigint(20) NOT NULL AUTO_INCREMENT,
     `cluster_id` bigint(20) DEFAULT NULL,
@@ -120,3 +123,7 @@ CREATE TABLE `canal_node_client` (
     `modified_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+-- 2020-10-15
+ALTER TABLE `canal_adapter_config`
+    ADD COLUMN `client_id` bigint(20) NULL AFTER `id`;
+

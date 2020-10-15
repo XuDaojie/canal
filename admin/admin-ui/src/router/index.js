@@ -139,12 +139,12 @@ export const constantRoutes = [
     name: 'Canal Client',
     meta: { title: 'Canal Client', icon: 'example' },
     children: [
-      {
-        path: 'canalClusters',
-        name: 'Canal 集群管理',
-        component: () => import('@/views/canalClient/CanalCluster'),
-        meta: { title: '集群管理', icon: 'tree' }
-      },
+      // {
+      //   path: 'canalClusters',
+      //   name: 'Canal 集群管理',
+      //   component: () => import('@/views/canalClient/CanalCluster'),
+      //   meta: { title: '集群管理', icon: 'tree' }
+      // },
       {
         path: 'nodeClients',
         name: 'Client 状态',

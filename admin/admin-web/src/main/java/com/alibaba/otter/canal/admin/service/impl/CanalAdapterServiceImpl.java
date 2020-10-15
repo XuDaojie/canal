@@ -5,14 +5,18 @@ import com.alibaba.otter.canal.admin.connector.AdminConnector;
 import com.alibaba.otter.canal.admin.connector.SimpleAdminConnectors;
 import com.alibaba.otter.canal.admin.model.CanalAdapterConfig;
 import com.alibaba.otter.canal.admin.model.CanalInstanceConfig;
+import com.alibaba.otter.canal.admin.model.NodeClient;
 import com.alibaba.otter.canal.admin.model.NodeServer;
 import com.alibaba.otter.canal.admin.model.Pager;
+import com.alibaba.otter.canal.admin.rest.ClientAdapterApi;
 import com.alibaba.otter.canal.admin.service.CanalAdapterService;
 import com.google.common.collect.Lists;
 
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
+import org.yaml.snakeyaml.Yaml;
 
+import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -32,17 +36,41 @@ public class CanalAdapterServiceImpl implements CanalAdapterService {
 
     @Override
     public Pager<CanalAdapterConfig> findList(CanalAdapterConfig canalAdapterConfig, Pager<CanalAdapterConfig> pager) {
-        Query<CanalAdapterConfig> query = CanalAdapterConfig.find.query()
+        Query<CanalAdapterConfig> query = getBaseQuery(canalAdapterConfig)
                 .select("*");
-        List<CanalAdapterConfig> canalAdapterConfigs = query.findList();
+        Query<CanalAdapterConfig> queryCnt = query.copy();
+
+        int cnt = queryCnt.findCount();
+        pager.setCount((long) cnt);
+
+        List<CanalAdapterConfig> canalAdapterConfigs = query.order()
+                .asc("id")
+                .setFirstRow(pager.getOffset().intValue())
+                .setMaxRows(pager.getSize())
+                .findList();
         pager.setItems(canalAdapterConfigs);
-        pager.setCount((long) pager.getItems().size()); // todo 修改为getcount
         pager.getItems().forEach(new Consumer<CanalAdapterConfig>() {
             @Override
             public void accept(CanalAdapterConfig canalAdapterConfig) {
                 canalAdapterConfig.setRunningStatus("1");
+                Yaml yaml = new Yaml();
+                Map<String, Object> ymlMap = yaml.load(canalAdapterConfig.getContent());
+                if (ymlMap.get("destination") == null) return;
+
+                String destination = String.valueOf(ymlMap.get("destination"));
+                // todo 优化为并行调用
+                NodeClient nodeClient = canalAdapterConfig.getNodeClient();
+                if (nodeClient != null) {
+                    String url = MessageFormat.format("http://{0}:{1}", nodeClient.getIp(), nodeClient.getPort());
+                    ClientAdapterApi api = ClientAdapterApi.apis.get(url);
+                    Map<String, String> result = api.syncSwitch(destination);
+                    canalAdapterConfig.setRunningStatus("on".equals(result.get("status")) ? "1" : "0");
+                } else {
+
+                }
             }
         });
+
         return pager;
     }
 
@@ -210,5 +238,14 @@ public class CanalAdapterServiceImpl implements CanalAdapterService {
             return false;
         }
         return true;
+    }
+
+    private Query<CanalAdapterConfig> getBaseQuery(CanalAdapterConfig canalAdapterConfig) {
+        Query<CanalAdapterConfig> query = CanalAdapterConfig.find.query();
+        if (StringUtils.isNotBlank(canalAdapterConfig.getName())) {
+            query.where().eq("name", canalAdapterConfig.getName());
+        }
+
+        return query;
     }
 }

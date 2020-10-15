@@ -3,7 +3,10 @@ package com.alibaba.otter.canal.admin.model;
 import java.util.Date;
 
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.Transient;
 
 import io.ebean.Finder;
@@ -13,7 +16,7 @@ import io.ebean.annotation.WhenModified;
  * Canal-Adapter配置信息实体类
  *
  * @author XuDaojie 2020-09-21
- * @since  1.1.5
+ * @since 1.1.5
  */
 @Entity
 public class CanalAdapterConfig extends Model {
@@ -32,16 +35,21 @@ public class CanalAdapterConfig extends Model {
     }
 
     @Id
-    private Long         id;
-    private String       category;
-    private String       name;
-    private String       status;             // 1: 正常 0: 停止
-    private String       content;
+    private Long       id;
+    private Long       clientId;
+    private String     category;
+    private String     name;
+    private String     status;              // 1: 正常 0: 停止
+    private String     content;
     @WhenModified
-    private Date         modifiedTime;
+    private Date       modifiedTime;
 
     @Transient
-    private String       runningStatus = "0"; // 1: 运行中 0: 停止
+    private String     runningStatus = "0"; // 1: 运行中 0: 停止
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "client_id", updatable = false, insertable = false)
+    private NodeClient nodeClient;
 
     public void init() {
         status = "1";
@@ -53,6 +61,14 @@ public class CanalAdapterConfig extends Model {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Long getClientId() {
+        return clientId;
+    }
+
+    public void setClientId(Long clientId) {
+        this.clientId = clientId;
     }
 
     public String getName() {
@@ -101,5 +117,13 @@ public class CanalAdapterConfig extends Model {
 
     public void setRunningStatus(String runningStatus) {
         this.runningStatus = runningStatus;
+    }
+
+    public NodeClient getNodeClient() {
+        return nodeClient;
+    }
+
+    public void setNodeClient(NodeClient nodeClient) {
+        this.nodeClient = nodeClient;
     }
 }

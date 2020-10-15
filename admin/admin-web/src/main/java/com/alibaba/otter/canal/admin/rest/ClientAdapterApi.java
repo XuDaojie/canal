@@ -107,6 +107,6 @@ public interface ClientAdapterApi {
      * 获取日志
      * @param lines
      */
-    @RequestLine("GET /canal/log?lines={lines}")
+    @RequestLine("GET /canalClient/log?lines={lines}")
     Map<String, Object> canalLog(@Param("lines") int lines);
 }

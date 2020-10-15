@@ -4,6 +4,11 @@
       <div class="filter-container" style="padding-left: 10px;padding-top: 20px;">
         <el-input v-model="form.name" placeholder="Adapter 名称" style="width: 200px;" class="filter-item" />
         <el-input v-model="form.category" placeholder="Adapter 种类" style="width: 200px;" class="filter-item" />
+        <el-select v-model="form.clientId" placeholder="所属主机" class="filter-item">
+          <el-option-group v-for="group in options" :key="group.label" :label="group.label">
+            <el-option v-for="item in group.options" :key="item.value" :label="item.label" :value="item.value" />
+          </el-option-group>
+        </el-select>
         <el-button class="filter-item" type="primary" @click="onSubmit">保存</el-button>
         <el-button class="filter-item" type="success" @click="onLoadTemplate">载入模板</el-button>
         <el-button class="filter-item" type="info" @click="onBack">返回</el-button>
@@ -14,9 +19,8 @@
 </template>
 
 <script>
-import { addCanalInstance, getTemplateAdapter } from '@/api/canalAdapter'
-import { getClustersAndServers } from '@/api/canalCluster'
-import {addCanalAdapter} from "../../api/canalAdapter";
+import { getTemplateAdapter, addCanalAdapter } from '@/api/canalAdapter'
+import { getNodeClients } from '@/api/nodeClient'
 
 export default {
   components: {
@@ -28,13 +32,30 @@ export default {
       form: {
         name: '',
         content: '',
-        clusterServerId: ''
+        clientId: ''
       }
     }
   },
   created() {
-    getClustersAndServers().then((res) => {
-      this.options = res.data
+    const query = {
+      page: 1,
+      size: 9999
+    }
+    getNodeClients(query).then((res) => {
+      const options = []
+      for (let i = 0; i < res.data.items.length; i++) {
+        const item = res.data.items[i]
+        const option = {
+          label: item.name,
+          value: item.id
+        }
+        options[i] = option
+      }
+
+      this.options = [{
+        options: options,
+        label: '主机'
+      }]
     })
   },
   methods: {
@@ -59,6 +80,13 @@ export default {
       if (this.form.category === '') {
         this.$message({
           message: '请输入Adapter种类',
+          type: 'error'
+        })
+        return
+      }
+      if (this.form.clientId === '') {
+        this.$message({
+          message: '请选择主机',
           type: 'error'
         })
         return
@@ -99,7 +127,6 @@ export default {
       history.go(-1)
     },
     onLoadTemplate() {
-      console.log("xx")
       getTemplateAdapter(this.form).then(res => {
         if (res.data === null || res.data === '') {
           this.$message({
