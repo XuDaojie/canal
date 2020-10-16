@@ -1,5 +1,15 @@
 package com.alibaba.otter.canal.adapter.launcher.monitor.remote;
 
+import com.alibaba.druid.pool.DruidDataSource;
+import com.alibaba.otter.canal.adapter.launcher.config.AdapterConfigHolder;
+import com.alibaba.otter.canal.common.utils.CommonUtils;
+import com.alibaba.otter.canal.common.utils.NamedThreadFactory;
+import com.google.common.base.Joiner;
+
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
@@ -14,16 +24,6 @@ import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.alibaba.druid.pool.DruidDataSource;
-import com.alibaba.otter.canal.adapter.launcher.config.AdapterConfigHolder;
-import com.alibaba.otter.canal.common.utils.CommonUtils;
-import com.alibaba.otter.canal.common.utils.NamedThreadFactory;
-import com.google.common.base.Joiner;
 
 /**
  * 基于数据库的远程配置装载器
@@ -44,7 +44,13 @@ public class DbRemoteConfigLoader implements RemoteConfigLoader {
 
     private RemoteAdapterMonitor     remoteAdapterMonitor      = new RemoteAdapterMonitorImpl();
 
-    public DbRemoteConfigLoader(String driverName, String jdbcUrl, String jdbcUsername, String jdbcPassword){
+    private String                   name;
+
+    /**
+     * @param name 需要和admin中配置的client name一致
+     */
+    public DbRemoteConfigLoader(String driverName, String jdbcUrl, String jdbcUsername, String jdbcPassword, String name) {
+        this.name = name;
         dataSource = new DruidDataSource();
         if (StringUtils.isEmpty(driverName)) {
             driverName = "com.mysql.jdbc.Driver";
@@ -92,13 +98,17 @@ public class DbRemoteConfigLoader implements RemoteConfigLoader {
      * @return 配置对象
      */
     private ConfigItem getRemoteAdapterConfig() {
-        String sql = "select name, content, modified_time from canal_config where id=2";
+        String sql = String.format(
+                "SELECT b.id, b.name, b.content, b.modified_time\n" +
+                "FROM canal_node_client a\n" +
+                "LEFT JOIN canal_config b ON a.id = b.server_id\n" +
+                "WHERE a.name='%s'", this.name);
         try (Connection conn = dataSource.getConnection();
                 Statement stmt = conn.createStatement();
                 ResultSet rs = stmt.executeQuery(sql)) {
             if (rs.next()) {
                 ConfigItem configItem = new ConfigItem();
-                configItem.setId(2L);
+                configItem.setId(rs.getLong("id"));
                 configItem.setName(rs.getString("name"));
                 configItem.setContent(rs.getString("content"));
                 configItem.setModifiedTime(rs.getTimestamp("modified_time").getTime());
@@ -145,7 +155,11 @@ public class DbRemoteConfigLoader implements RemoteConfigLoader {
      */
     private void loadModifiedAdapterConfigs() {
         Map<String, ConfigItem> remoteConfigStatus = new HashMap<>();
-        String sql = "select id, category, name, modified_time from canal_adapter_config";
+        String sql = String.format(
+                "SELECT b.id, b.category, b.name, b.modified_time\n" +
+                "FROM canal_node_client a\n" +
+                "LEFT JOIN canal_adapter_config b ON a.id = b.client_id\n" +
+                "WHERE a.name='%s'", this.name);
         try (Connection conn = dataSource.getConnection();
                 Statement stmt = conn.createStatement();
                 ResultSet rs = stmt.executeQuery(sql)) {

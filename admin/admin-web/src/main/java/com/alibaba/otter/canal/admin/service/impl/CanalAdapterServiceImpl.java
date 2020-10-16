@@ -58,13 +58,19 @@ public class CanalAdapterServiceImpl implements CanalAdapterService {
                 if (ymlMap.get("destination") == null) return;
 
                 String destination = String.valueOf(ymlMap.get("destination"));
-                // todo 优化为并行调用
+                // todo 优化为并行调用 节点不存在或服务停机
                 NodeClient nodeClient = canalAdapterConfig.getNodeClient();
                 if (nodeClient != null) {
                     String url = MessageFormat.format("http://{0}:{1}", nodeClient.getIp(), nodeClient.getPort());
-                    ClientAdapterApi api = ClientAdapterApi.apis.get(url);
-                    Map<String, String> result = api.syncSwitch(destination);
-                    canalAdapterConfig.setRunningStatus("on".equals(result.get("status")) ? "1" : "0");
+                    try {
+                        ClientAdapterApi api = ClientAdapterApi.apis.get(url);
+                        Map<String, String> result = api.syncSwitch(destination);
+                        canalAdapterConfig.setRunningStatus("on".equals(result.get("status")) ? "1" : "0");
+                    } catch (Exception e) {
+//                        logger.error
+                        e.printStackTrace();
+                        canalAdapterConfig.setRunningStatus("0");
+                    }
                 } else {
 
                 }
