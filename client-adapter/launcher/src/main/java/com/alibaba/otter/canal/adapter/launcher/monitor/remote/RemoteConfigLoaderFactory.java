@@ -24,8 +24,9 @@ public class RemoteConfigLoaderFactory {
                 String jdbcUsername = env.getProperty("canal.manager.jdbc.username");
                 String jdbcPassword = env.getProperty("canal.manager.jdbc.password");
 
-                String name = env.getProperty("canal.manager.name");
-                return new DbRemoteConfigLoader(driverName, jdbcUrl, jdbcUsername, jdbcPassword, name);
+                String serverPort = env.getProperty("server.port");
+                String serverAddress = env.getProperty("server.address");
+                return new DbRemoteConfigLoader(driverName, jdbcUrl, jdbcUsername, jdbcPassword, serverAddress, serverPort);
             }
             // 可扩展其它远程配置加载器
         } catch (Exception e) {

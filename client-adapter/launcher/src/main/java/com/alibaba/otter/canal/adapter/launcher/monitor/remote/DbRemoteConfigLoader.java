@@ -44,13 +44,13 @@ public class DbRemoteConfigLoader implements RemoteConfigLoader {
 
     private RemoteAdapterMonitor     remoteAdapterMonitor      = new RemoteAdapterMonitorImpl();
 
-    private String                   name;
+    private String                   serverAddress;
+    private String                   serverPort;
 
-    /**
-     * @param name 需要和admin中配置的client name一致
-     */
-    public DbRemoteConfigLoader(String driverName, String jdbcUrl, String jdbcUsername, String jdbcPassword, String name) {
-        this.name = name;
+    public DbRemoteConfigLoader(String driverName, String jdbcUrl, String jdbcUsername, String jdbcPassword,
+                                String serverAddress, String serverPort) {
+        this.serverAddress = serverAddress;
+        this.serverPort = serverPort;
         dataSource = new DruidDataSource();
         if (StringUtils.isEmpty(driverName)) {
             driverName = "com.mysql.jdbc.Driver";
@@ -102,7 +102,8 @@ public class DbRemoteConfigLoader implements RemoteConfigLoader {
                 "SELECT b.id, b.name, b.content, b.modified_time\n" +
                 "FROM canal_node_client a\n" +
                 "LEFT JOIN canal_config b ON a.id = b.server_id\n" +
-                "WHERE a.name='%s'", this.name);
+                "WHERE a.ip='%s'\n" +
+                "AND a.port='%s'", this.serverAddress, this.serverPort);
         try (Connection conn = dataSource.getConnection();
                 Statement stmt = conn.createStatement();
                 ResultSet rs = stmt.executeQuery(sql)) {
@@ -159,7 +160,8 @@ public class DbRemoteConfigLoader implements RemoteConfigLoader {
                 "SELECT b.id, b.category, b.name, b.modified_time\n" +
                 "FROM canal_node_client a\n" +
                 "LEFT JOIN canal_adapter_config b ON a.id = b.client_id\n" +
-                "WHERE a.name='%s'", this.name);
+                "WHERE a.ip='%s'\n" +
+                "AND a.port", this.serverAddress, this.serverPort);
         try (Connection conn = dataSource.getConnection();
                 Statement stmt = conn.createStatement();
                 ResultSet rs = stmt.executeQuery(sql)) {
