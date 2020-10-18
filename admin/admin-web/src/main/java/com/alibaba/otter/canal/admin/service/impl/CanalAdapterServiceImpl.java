@@ -29,27 +29,27 @@ import io.ebean.Query;
  * Canal-Adapter配置信息业务层
  *
  * @author XuDaojie 2020-09-21
- * @since  1.1.5
+ * @since 1.1.5
  */
 @Service
 public class CanalAdapterServiceImpl implements CanalAdapterService {
 
     @Override
     public Pager<CanalAdapterConfig> findList(CanalAdapterConfig canalAdapterConfig, Pager<CanalAdapterConfig> pager) {
-        Query<CanalAdapterConfig> query = getBaseQuery(canalAdapterConfig)
-                .select("*");
+        Query<CanalAdapterConfig> query = getBaseQuery(canalAdapterConfig).select("*");
         Query<CanalAdapterConfig> queryCnt = query.copy();
 
         int cnt = queryCnt.findCount();
         pager.setCount((long) cnt);
 
         List<CanalAdapterConfig> canalAdapterConfigs = query.order()
-                .asc("id")
-                .setFirstRow(pager.getOffset().intValue())
-                .setMaxRows(pager.getSize())
-                .findList();
+            .asc("id")
+            .setFirstRow(pager.getOffset().intValue())
+            .setMaxRows(pager.getSize())
+            .findList();
         pager.setItems(canalAdapterConfigs);
         pager.getItems().forEach(new Consumer<CanalAdapterConfig>() {
+
             @Override
             public void accept(CanalAdapterConfig canalAdapterConfig) {
                 canalAdapterConfig.setRunningStatus("1");
@@ -67,7 +67,7 @@ public class CanalAdapterServiceImpl implements CanalAdapterService {
                         Map<String, String> result = api.syncSwitch(destination);
                         canalAdapterConfig.setRunningStatus("on".equals(result.get("status")) ? "1" : "0");
                     } catch (Exception e) {
-//                        logger.error
+                        // logger.error
                         e.printStackTrace();
                         canalAdapterConfig.setRunningStatus("0");
                     }
@@ -91,9 +91,8 @@ public class CanalAdapterServiceImpl implements CanalAdapterService {
         if (nodeServer == null) {
             return null;
         }
-        String runningInstances = SimpleAdminConnectors.execute(nodeServer.getIp(),
-            nodeServer.getAdminPort(),
-            AdminConnector::getRunningInstances);
+        String runningInstances = SimpleAdminConnectors
+            .execute(nodeServer.getIp(), nodeServer.getAdminPort(), AdminConnector::getRunningInstances);
         if (runningInstances == null) {
             return null;
         }
@@ -135,13 +134,28 @@ public class CanalAdapterServiceImpl implements CanalAdapterService {
         if (StringUtils.isEmpty(canalAdapterConfig.getCategory())) {
             throw new ServiceException("empty category");
         }
+        if (canalAdapterConfig.getClusterClientId().startsWith("cluster:")) {
+            Long clusterId = Long.parseLong(canalAdapterConfig.getClusterClientId().substring(8));
+            canalAdapterConfig.setClusterId(clusterId);
+        } else if (canalAdapterConfig.getClusterClientId().startsWith("client:")) {
+            Long serverId = Long.parseLong(canalAdapterConfig.getClusterClientId().substring(7));
+            canalAdapterConfig.setClientId(serverId);
+        }
 
         canalAdapterConfig.insert();
     }
 
     @Override
     public CanalAdapterConfig detail(Long id) {
-        return CanalAdapterConfig.find.byId(id);
+        CanalAdapterConfig canalAdapterConfig = CanalAdapterConfig.find.byId(id);
+        if (canalAdapterConfig != null) {
+            if (canalAdapterConfig.getClusterId() != null) {
+                canalAdapterConfig.setClusterClientId("cluster:" + canalAdapterConfig.getClusterId());
+            } else if (canalAdapterConfig.getClientId() != null) {
+                canalAdapterConfig.setClusterClientId("server:" + canalAdapterConfig.getClientId());
+            }
+        }
+        return canalAdapterConfig;
     }
 
     @Override

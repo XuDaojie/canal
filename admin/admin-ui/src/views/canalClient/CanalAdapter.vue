@@ -17,8 +17,8 @@
     >
       <el-table-column label="所属集群" min-width="200" align="center">
         <template slot-scope="scope">
-          <span v-if="scope.row.nodeClient !== null && scope.row.nodeClient.canalCluster != null">
-            {{ scope.row.nodeClient.canalCluster.name }}
+          <span v-if="scope.row.canalCluster !== null">
+            {{ scope.row.canalCluster.name }}
           </span>
           <span v-else>-</span>
         </template>
@@ -76,7 +76,6 @@
 <script>
 import { getCanalAdapters, instanceStatus } from '@/api/canalAdapter'
 import Pagination from '@/components/Pagination'
-import { getClustersAndServers } from '@/api/canalCluster'
 import { deleteCanalAdapter } from '@/api/canalAdapter'
 
 export default {
@@ -117,9 +116,6 @@ export default {
     }
   },
   created() {
-    getClustersAndServers().then((res) => {
-      this.options = res.data
-    })
     this.fetchData()
   },
   methods: {

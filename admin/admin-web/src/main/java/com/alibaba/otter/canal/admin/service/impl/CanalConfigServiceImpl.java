@@ -45,12 +45,21 @@ public class CanalConfigServiceImpl implements CanalConfigService {
         canalConfig.save();
     }
 
-    public CanalConfig getCanalConfig(Long clusterId, Long serverId) {
+    @Override
+    public CanalConfig getCanalConfig(Long clusterId, Long serverId, String name) {
         CanalConfig config = null;
         if (clusterId != null && clusterId != 0) {
-            config = CanalConfig.find.query().where().eq("clusterId", clusterId).findOne();
+            config = CanalConfig.find.query()
+                    .where()
+                    .eq("clusterId", clusterId)
+                    .eq("name", name)
+                    .findOne();
         } else if (serverId != null && serverId != 0) {
-            config = CanalConfig.find.query().where().eq("serverId", serverId).findOne();
+            config = CanalConfig.find.query()
+                    .where()
+                    .eq("serverId", serverId)
+                    .eq("name", name)
+                    .findOne();
             if (config == null) {
                 NodeServer nodeServer = NodeServer.find.byId(serverId);
                 if (nodeServer != null) {
@@ -65,7 +74,7 @@ public class CanalConfigServiceImpl implements CanalConfigService {
         }
         if (config == null) {
             config = new CanalConfig();
-            config.setName(CANAL_GLOBAL_CONFIG);
+            config.setName(name);
             return config;
         }
 
@@ -101,6 +110,7 @@ public class CanalConfigServiceImpl implements CanalConfigService {
     }
 
     public CanalConfig getClientConfig() {
+        // todo id 写死
         long id = 2L;
         CanalConfig config = CanalConfig.find.byId(id);
         if (config == null) {
@@ -134,7 +144,7 @@ public class CanalConfigServiceImpl implements CanalConfigService {
             }
             canalConfig.update("serverId", "content", "contentMd5");
         } else {
-            canalConfig.setName(CanalConfig.SERVER);
+//            canalConfig.setName(CanalConfig.SERVER);
             canalConfig.save();
         }
     }

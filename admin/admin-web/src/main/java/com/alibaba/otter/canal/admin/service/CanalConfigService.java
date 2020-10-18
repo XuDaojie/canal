@@ -7,7 +7,7 @@ public interface CanalConfigService {
 
     void save(CanalConfig canalConfig);
 
-    CanalConfig getCanalConfig(Long clusterId, Long serverId);
+    CanalConfig getCanalConfig(Long clusterId, Long serverId, String name);
 
     CanalConfig getCanalConfig(Long id);
 

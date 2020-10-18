@@ -33,8 +33,8 @@
             <el-dropdown-menu slot="dropdown">
               <el-dropdown-item @click.native="handleConfig(scope.row)">主配置</el-dropdown-item>
               <el-dropdown-item @click.native="handleUpdate(scope.row)">修改集群</el-dropdown-item>
-              <el-dropdown-item @click.native="handleDelete(scope.row)">删除集群</el-dropdown-item>
-              <el-dropdown-item @click.native="handleView(scope.row)">查看Server</el-dropdown-item>
+              <el-dropdown-item disabled @click.native="handleDelete(scope.row)">删除集群</el-dropdown-item>
+              <el-dropdown-item disabled @click.native="handleView(scope.row)">查看Client</el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>
         </template>
@@ -163,10 +163,10 @@ export default {
       }
     },
     handleView(row) {
-      this.$router.push('/canalServer/nodeServers?clusterId=' + row.id)
+      // this.$router.push('/canalServer/nodeServers?clusterId=' + row.id)
     },
     handleConfig(row) {
-      this.$router.push('/canalServer/nodeServer/config?clusterId=' + row.id)
+      this.$router.push('/canalClient/nodeClient/config?clusterId=' + row.id)
     },
     handleUpdate(row) {
       this.resetModel()

@@ -35,21 +35,27 @@ public class CanalAdapterConfig extends Model {
     }
 
     @Id
-    private Long       id;
-    private Long       clientId;
-    private String     category;
-    private String     name;
-    private String     status;              // 1: 正常 0: 停止
-    private String     content;
+    private Long         id;
+    private Long         clusterId;
+    private Long         clientId;
+    private String       category;
+    private String       name;
+    private String       status;              // 1: 正常 0: 停止
+    private String       content;
     @WhenModified
-    private Date       modifiedTime;
+    private Date         modifiedTime;
 
     @Transient
-    private String     runningStatus = "0"; // 1: 运行中 0: 停止
+    private String       clusterClientId;
+    @Transient
+    private String       runningStatus = "0"; // 1: 运行中 0: 停止
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cluster_id", updatable = false, insertable = false)
+    private CanalCluster canalCluster;
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "client_id", updatable = false, insertable = false)
-    private NodeClient nodeClient;
+    private NodeClient   nodeClient;
 
     public void init() {
         status = "1";
@@ -61,6 +67,14 @@ public class CanalAdapterConfig extends Model {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Long getClusterId() {
+        return clusterId;
+    }
+
+    public void setClusterId(Long clusterId) {
+        this.clusterId = clusterId;
     }
 
     public Long getClientId() {
@@ -103,6 +117,14 @@ public class CanalAdapterConfig extends Model {
         this.modifiedTime = modifiedTime;
     }
 
+    public String getClusterClientId() {
+        return clusterClientId;
+    }
+
+    public void setClusterClientId(String clusterClientId) {
+        this.clusterClientId = clusterClientId;
+    }
+
     public String getCategory() {
         return category;
     }
@@ -117,6 +139,14 @@ public class CanalAdapterConfig extends Model {
 
     public void setRunningStatus(String runningStatus) {
         this.runningStatus = runningStatus;
+    }
+
+    public CanalCluster getCanalCluster() {
+        return canalCluster;
+    }
+
+    public void setCanalCluster(CanalCluster canalCluster) {
+        this.canalCluster = canalCluster;
     }
 
     public NodeClient getNodeClient() {

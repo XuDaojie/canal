@@ -97,7 +97,9 @@ public class NodeClientServiceImpl implements NodeClientService {
 
     @Override
     public List<NodeClient> findAll(NodeClient nodeClient) {
-        return null;
+        Query<NodeClient> query = getBaseQuery(nodeClient);
+        query.order().asc("id");
+        return query.findList();
     }
 
     @Override

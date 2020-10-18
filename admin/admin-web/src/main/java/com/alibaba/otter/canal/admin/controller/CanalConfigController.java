@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -36,8 +37,9 @@ public class CanalConfigController {
      */
     @GetMapping(value = "/config/{clusterId}/{serverId}")
     public BaseModel<CanalConfig> canalConfig(@PathVariable Long clusterId, @PathVariable Long serverId,
-                                              @PathVariable String env) {
-        return BaseModel.getInstance(canalConfigService.getCanalConfig(clusterId, serverId));
+                                              @PathVariable String env,
+                                              @RequestParam(value = "name",defaultValue = "canal.properties") String name) {
+        return BaseModel.getInstance(canalConfigService.getCanalConfig(clusterId, serverId, name));
     }
 
     /**

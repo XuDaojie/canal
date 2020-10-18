@@ -5,7 +5,7 @@
         <el-form-item>
           {{ form.name }}&nbsp;&nbsp;&nbsp;&nbsp;
           <el-input v-model="form.category" placeholder="Adapter 种类" style="width: 200px;" class="filter-item" />
-          <el-select v-model="form.clientId" placeholder="所属主机" class="filter-item">
+          <el-select v-model="form.clusterClientId" placeholder="所属主机" class="filter-item">
             <el-option-group v-for="group in options" :key="group.label" :label="group.label">
               <el-option v-for="item in group.options" :key="item.value" :label="item.label" :value="item.value" />
             </el-option-group>
@@ -22,7 +22,7 @@
 
 <script>
 import { canalAdapterDetail, updateCanalAdapter } from '@/api/canalAdapter'
-import { getNodeClients } from '@/api/nodeClient'
+import { getClustersAndClients } from '@/api/canalCluster'
 
 export default {
   components: {
@@ -41,25 +41,8 @@ export default {
   },
   created() {
     this.loadCanalConfig()
-    const query = {
-      page: 1,
-      size: 9999
-    }
-    getNodeClients(query).then((res) => {
-      const options = []
-      for (let i = 0; i < res.data.items.length; i++) {
-        const item = res.data.items[i]
-        const option = {
-          label: item.name,
-          value: item.id
-        }
-        options[i] = option
-      }
-
-      this.options = [{
-        options: options,
-        label: '主机'
-      }]
+    getClustersAndClients().then((res) => {
+      this.options = res.data
     })
   },
   methods: {
@@ -80,7 +63,7 @@ export default {
         this.form.name = data.name
         this.form.category = data.category
         this.form.content = data.content
-        this.form.clientId = data.clientId
+        this.form.clusterClientId = data.clusterClientId
       })
     },
     onSubmit() {

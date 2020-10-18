@@ -44,3 +44,11 @@ export function getClustersAndServers() {
     method: 'get'
   })
 }
+
+export function getClustersAndClients() {
+  return request({
+    url: '/canal/clustersAndClients',
+    method: 'get'
+  })
+}
+
