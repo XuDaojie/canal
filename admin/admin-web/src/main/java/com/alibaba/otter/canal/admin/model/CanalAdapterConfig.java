@@ -48,7 +48,7 @@ public class CanalAdapterConfig extends Model {
     @Transient
     private String       clusterClientId;
     @Transient
-    private String       runningStatus = "0"; // 1: 运行中 0: 停止
+    private String       runningStatus = "0"; // 1: 运行中 0: 停止 -1:断开
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cluster_id", updatable = false, insertable = false)

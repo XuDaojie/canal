@@ -82,14 +82,16 @@ export default {
     statusFilter(status) {
       const statusMap = {
         '1': 'success',
-        '0': 'gray'
+        '0': 'gray',
+        '-1': 'danger'
       }
       return statusMap[status]
     },
     statusLabel(status) {
       const statusMap = {
         '1': '启动',
-        '0': '停止'
+        '0': '停止',
+        '-1': '断开'
       }
       return statusMap[status]
     }

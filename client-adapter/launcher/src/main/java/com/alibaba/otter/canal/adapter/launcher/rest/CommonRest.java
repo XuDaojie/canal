@@ -1,14 +1,12 @@
 package com.alibaba.otter.canal.adapter.launcher.rest;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
+import com.alibaba.otter.canal.adapter.launcher.common.EtlLock;
+import com.alibaba.otter.canal.adapter.launcher.common.SyncSwitch;
+import com.alibaba.otter.canal.adapter.launcher.config.AdapterCanalConfig;
+import com.alibaba.otter.canal.client.adapter.OuterAdapter;
+import com.alibaba.otter.canal.client.adapter.support.EtlResult;
+import com.alibaba.otter.canal.client.adapter.support.ExtensionLoader;
+import com.alibaba.otter.canal.client.adapter.support.Result;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,13 +17,15 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.alibaba.otter.canal.adapter.launcher.common.EtlLock;
-import com.alibaba.otter.canal.adapter.launcher.common.SyncSwitch;
-import com.alibaba.otter.canal.adapter.launcher.config.AdapterCanalConfig;
-import com.alibaba.otter.canal.client.adapter.OuterAdapter;
-import com.alibaba.otter.canal.client.adapter.support.EtlResult;
-import com.alibaba.otter.canal.client.adapter.support.ExtensionLoader;
-import com.alibaba.otter.canal.client.adapter.support.Result;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 
 /**
  * 适配器操作Rest
@@ -213,7 +213,9 @@ public class CommonRest {
             resStatus = "off";
         }
         Map<String, String> res = new LinkedHashMap<>();
+        // 兼容 保留拼写错误字段
         res.put("stauts", resStatus);
+        res.put("status", resStatus);
         return res;
     }
 }

@@ -13,11 +13,14 @@ import com.alibaba.otter.canal.admin.service.CanalAdapterService;
 import com.google.common.collect.Lists;
 
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.yaml.snakeyaml.Yaml;
 
 import java.text.MessageFormat;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +36,8 @@ import io.ebean.Query;
  */
 @Service
 public class CanalAdapterServiceImpl implements CanalAdapterService {
+
+    private static final Logger logger = LoggerFactory.getLogger(CanalInstanceServiceImpl.class.getName());
 
     @Override
     public Pager<CanalAdapterConfig> findList(CanalAdapterConfig canalAdapterConfig, Pager<CanalAdapterConfig> pager) {
@@ -52,27 +57,36 @@ public class CanalAdapterServiceImpl implements CanalAdapterService {
 
             @Override
             public void accept(CanalAdapterConfig canalAdapterConfig) {
-                canalAdapterConfig.setRunningStatus("1");
+                // todo 并行调用
                 Yaml yaml = new Yaml();
                 Map<String, Object> ymlMap = yaml.load(canalAdapterConfig.getContent());
                 if (ymlMap.get("destination") == null) return;
 
                 String destination = String.valueOf(ymlMap.get("destination"));
-                // todo 优化为并行调用 节点不存在或服务停机
-                NodeClient nodeClient = canalAdapterConfig.getNodeClient();
-                if (nodeClient != null) {
+                List<NodeClient> nodeClients;
+                if (canalAdapterConfig.getClusterId() != null) {
+                    // cluster
+                    nodeClients = NodeClient.find.query()
+                            .where()
+                            .eq("clusterId", canalAdapterConfig.getClusterId())
+                            .findList();
+                } else {
+                    // single
+                    nodeClients = Collections.singletonList(canalAdapterConfig.getNodeClient());
+                }
+
+                // 默认为断开状态
+                canalAdapterConfig.setRunningStatus("-1");
+                for (NodeClient nodeClient : nodeClients) {
                     String url = MessageFormat.format("http://{0}:{1}", nodeClient.getIp(), nodeClient.getPort());
                     try {
                         ClientAdapterApi api = ClientAdapterApi.apis.get(url);
                         Map<String, String> result = api.syncSwitch(destination);
                         canalAdapterConfig.setRunningStatus("on".equals(result.get("status")) ? "1" : "0");
+                        break;
                     } catch (Exception e) {
-                        // logger.error
-                        e.printStackTrace();
-                        canalAdapterConfig.setRunningStatus("0");
+                        logger.warn(e.getMessage(), e);
                     }
-                } else {
-
                 }
             }
         });
