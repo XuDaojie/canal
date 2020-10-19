@@ -5,6 +5,7 @@ import com.alibaba.otter.canal.adapter.launcher.config.AdapterConfigHolder;
 import com.alibaba.otter.canal.common.utils.CommonUtils;
 import com.alibaba.otter.canal.common.utils.NamedThreadFactory;
 import com.google.common.base.Joiner;
+import com.mysql.jdbc.exceptions.jdbc4.MySQLSyntaxErrorException;
 
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -98,15 +99,33 @@ public class DbRemoteConfigLoader implements RemoteConfigLoader {
      * @return 配置对象
      */
     private ConfigItem getRemoteAdapterConfig() {
-        String sql = String.format(
-                "SELECT b.id, b.name, b.content, b.modified_time\n" +
-                "FROM canal_node_client a\n" +
-                "LEFT JOIN canal_config b ON a.id = b.server_id\n" +
-                "WHERE a.ip='%s'\n" +
-                "AND a.port='%s'", this.serverAddress, this.serverPort);
+        String sqlNode = String.format(
+                "SELECT id, cluster_id, `name` \n" +
+                "FROM canal_node_client \n" +
+                "WHERE ip='%s' AND port = '%s'", this.serverAddress, this.serverPort);
+        String sqlConfig =
+                "SELECT id, name, content, modified_time FROM canal_config \n" +
+                "WHERE %s = %s AND `name` = 'application.yml'";
+        try (Connection conn = dataSource.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sqlNode)) {
+            if (rs.next()) {
+                Long id = rs.getLong("id");
+                Long clusterId = rs.getLong("cluster_id");
+                // rs.getLong() 为null时返回0
+                if (clusterId != 0L) {
+                    sqlConfig = String.format(sqlConfig, "cluster_id", clusterId);
+                } else {
+                    sqlConfig = String.format(sqlConfig, "server_id", id);
+                }
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
+
         try (Connection conn = dataSource.getConnection();
                 Statement stmt = conn.createStatement();
-                ResultSet rs = stmt.executeQuery(sql)) {
+                ResultSet rs = stmt.executeQuery(sqlConfig)) {
             if (rs.next()) {
                 ConfigItem configItem = new ConfigItem();
                 configItem.setId(rs.getLong("id"));
@@ -155,16 +174,34 @@ public class DbRemoteConfigLoader implements RemoteConfigLoader {
      * 加载有变动的adapter配置
      */
     private void loadModifiedAdapterConfigs() {
+        String sqlNode = String.format(
+                "SELECT id, cluster_id, `name` \n" +
+                "FROM canal_node_client \n" +
+                "WHERE ip='%s' AND port = '%s'", this.serverAddress, this.serverPort);
+        String sqlAdapter =
+                "SELECT id, category, name, modified_time " +
+                "FROM canal_adapter_config WHERE %s = %s";
+        try (Connection conn = dataSource.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sqlNode)) {
+            if (rs.next()) {
+                Long id = rs.getLong("id");
+                Long clusterId = rs.getLong("cluster_id");
+                // rs.getLong() 为null时返回0
+                if (clusterId != 0L) {
+                    sqlAdapter = String.format(sqlAdapter, "cluster_id", clusterId);
+                } else {
+                    sqlAdapter = String.format(sqlAdapter, "client_id", id);
+                }
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+        }
+
         Map<String, ConfigItem> remoteConfigStatus = new HashMap<>();
-        String sql = String.format(
-                "SELECT b.id, b.category, b.name, b.modified_time\n" +
-                "FROM canal_node_client a\n" +
-                "LEFT JOIN canal_adapter_config b ON a.id = b.client_id\n" +
-                "WHERE a.ip='%s'\n" +
-                "AND a.port", this.serverAddress, this.serverPort);
         try (Connection conn = dataSource.getConnection();
                 Statement stmt = conn.createStatement();
-                ResultSet rs = stmt.executeQuery(sql)) {
+                ResultSet rs = stmt.executeQuery(sqlAdapter)) {
             while (rs.next()) {
                 ConfigItem configItem = new ConfigItem();
                 configItem.setId(rs.getLong("id"));
@@ -173,6 +210,8 @@ public class DbRemoteConfigLoader implements RemoteConfigLoader {
                 configItem.setModifiedTime(rs.getTimestamp("modified_time").getTime());
                 remoteConfigStatus.put(configItem.getCategory() + "/" + configItem.getName(), configItem);
             }
+        } catch (MySQLSyntaxErrorException e) {
+            logger.error("在client管理中检查是否已配置节点 " + this.serverAddress + ":" + this.serverPort, e);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
