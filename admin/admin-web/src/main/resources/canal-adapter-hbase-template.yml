@@ -1,8 +1,8 @@
 dataSourceKey: defaultDS            # 对应application.yml中的datasourceConfigs下的配置
+destination: example              # 对应 canal destination/MQ topic 名称
 hbaseMapping:                       # mysql--HBase的单表映射配置
   mode: STRING                      # HBase中的存储类型, 默认统一存为String, 可选: #PHOENIX  #NATIVE   #STRING
   # NATIVE: 以java类型为主, PHOENIX: 将类型转换为Phoenix对应的类型
-  destination: example              # 对应 canal destination/MQ topic 名称
   database: mytest                  # 数据库名/schema名
   table: person                     # 表名
   hbaseTable: MYTEST.PERSON         # HBase表名

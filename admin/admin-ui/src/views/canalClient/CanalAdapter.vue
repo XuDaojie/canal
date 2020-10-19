@@ -38,9 +38,7 @@
       </el-table-column>
       <el-table-column label="Adapter 种类" min-width="200" align="center">
         <template slot-scope="scope">
-          <span v-if="scope.row.canalCluster !== null">
-            {{ scope.row.category }}
-          </span>
+          {{ scope.row.category }}
         </template>
       </el-table-column>
       <el-table-column class-name="status-col" label="状态" min-width="150" align="center">

@@ -1,16 +1,18 @@
 package com.alibaba.otter.canal.admin.service.impl;
 
-import io.ebean.Query;
-
-import java.util.List;
+import com.alibaba.otter.canal.admin.common.exception.ServiceException;
+import com.alibaba.otter.canal.admin.model.CanalAdapterConfig;
+import com.alibaba.otter.canal.admin.model.CanalCluster;
+import com.alibaba.otter.canal.admin.model.CanalInstanceConfig;
+import com.alibaba.otter.canal.admin.model.NodeClient;
+import com.alibaba.otter.canal.admin.model.NodeServer;
+import com.alibaba.otter.canal.admin.service.CanalClusterService;
 
 import org.springframework.stereotype.Service;
 
-import com.alibaba.otter.canal.admin.common.exception.ServiceException;
-import com.alibaba.otter.canal.admin.model.CanalCluster;
-import com.alibaba.otter.canal.admin.model.CanalInstanceConfig;
-import com.alibaba.otter.canal.admin.model.NodeServer;
-import com.alibaba.otter.canal.admin.service.CanalClusterService;
+import java.util.List;
+
+import io.ebean.Query;
 
 @Service
 public class CanalClusterServiceImpl implements CanalClusterService {
@@ -38,6 +40,18 @@ public class CanalClusterServiceImpl implements CanalClusterService {
         int instanceCnt = CanalInstanceConfig.find.query().where().eq("clusterId", id).findCount();
         if (instanceCnt > 0) {
             throw new ServiceException("当前集群下存在Instance配置，无法删除");
+        }
+
+        // 判断集群下是否存在client信息
+        int clientCnt = NodeClient.find.query().where().eq("clusterId", id).findCount();
+        if (clientCnt > 0) {
+            throw new ServiceException("当前集群下存在Client配置，无法删除");
+        }
+
+        // 判断集群下是否存在adapter信息
+        int adapterCnt = CanalAdapterConfig.find.query().where().eq("clusterId", id).findCount();
+        if (adapterCnt > 0) {
+            throw new ServiceException("当前集群下存在Adapter配置，无法删除");
         }
 
         CanalCluster canalCluster = CanalCluster.find.byId(id);
