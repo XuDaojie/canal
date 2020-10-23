@@ -110,6 +110,7 @@ export default {
       history.go(-1)
     },
     onLoadTemplate() {
+      console.log(this.form)
       getTemplateAdapter(this.form).then(res => {
         if (res.data === null || res.data === '') {
           this.$message({

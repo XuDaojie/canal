@@ -184,6 +184,13 @@ export const constantRoutes = [
         component: () => import('@/views/canalClient/CanalClientLogDetail'),
         meta: { title: 'Client 日志' },
         hidden: true
+      },
+      {
+        path: 'canalAdapter/batchBuild',
+        name: '批量新增 Adapter',
+        component: () => import('@/views/canalClient/CanalBatchBuild'),
+        meta: { title: '批量新增 Adapter' },
+        hidden: true
       }
     ]
   },

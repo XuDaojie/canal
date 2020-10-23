@@ -36,6 +36,11 @@ public class TemplateConfigLoader {
         return loadFile(fileName);
     }
 
+    public static String loadAdapterEngineConfig(String category) {
+        String fileName = "templates/canal-adapter-" + category + "-template.yml";
+        return loadFile(fileName);
+    }
+
     private static String loadFile(String fileName) {
         File configFile = new File(".." + File.separator + CONF_DIR + File.separator + fileName);
         if (!configFile.exists()) {

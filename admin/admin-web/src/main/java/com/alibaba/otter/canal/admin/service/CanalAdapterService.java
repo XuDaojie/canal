@@ -1,7 +1,6 @@
 package com.alibaba.otter.canal.admin.service;
 
 import com.alibaba.otter.canal.admin.model.CanalAdapterConfig;
-import com.alibaba.otter.canal.admin.model.CanalInstanceConfig;
 import com.alibaba.otter.canal.admin.model.Pager;
 
 import java.util.List;
@@ -19,6 +18,8 @@ public interface CanalAdapterService {
 
     void save(CanalAdapterConfig canalAdapterConfig);
 
+    void batchSave(List<CanalAdapterConfig> canalAdapterConfigs);
+
     CanalAdapterConfig detail(Long id);
 
     void updateContent(CanalAdapterConfig canalAdapterConfig);
@@ -31,5 +32,5 @@ public interface CanalAdapterService {
 
     boolean instanceOperation(Long id, String option);
 
-    List<CanalInstanceConfig> findActiveInstanceByServerId(Long serverId);
+    String previewTemplate(CanalAdapterConfig canalAdapterConfig);
 }

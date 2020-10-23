@@ -1,7 +1,6 @@
 package com.alibaba.otter.canal.admin.service.impl;
 
 import com.alibaba.otter.canal.admin.common.exception.ServiceException;
-import com.alibaba.otter.canal.admin.connector.AdminConnector;
 import com.alibaba.otter.canal.admin.connector.SimpleAdminConnectors;
 import com.alibaba.otter.canal.admin.model.CanalAdapterConfig;
 import com.alibaba.otter.canal.admin.model.CanalInstanceConfig;
@@ -10,21 +9,23 @@ import com.alibaba.otter.canal.admin.model.NodeServer;
 import com.alibaba.otter.canal.admin.model.Pager;
 import com.alibaba.otter.canal.admin.rest.ClientAdapterApi;
 import com.alibaba.otter.canal.admin.service.CanalAdapterService;
-import com.google.common.collect.Lists;
 
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.Context;
 import org.yaml.snakeyaml.Yaml;
 
 import java.text.MessageFormat;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+
+import javax.annotation.Resource;
 
 import io.ebean.Query;
 
@@ -38,6 +39,9 @@ import io.ebean.Query;
 public class CanalAdapterServiceImpl implements CanalAdapterService {
 
     private static final Logger logger = LoggerFactory.getLogger(CanalInstanceServiceImpl.class.getName());
+
+    @Resource(name = "dynamicTemplateEngine")
+    private TemplateEngine      dynamicTemplateEngine;
 
     @Override
     public Pager<CanalAdapterConfig> findList(CanalAdapterConfig canalAdapterConfig, Pager<CanalAdapterConfig> pager) {
@@ -57,26 +61,33 @@ public class CanalAdapterServiceImpl implements CanalAdapterService {
 
             @Override
             public void accept(CanalAdapterConfig canalAdapterConfig) {
+                // 默认为断开状态
+                canalAdapterConfig.setRunningStatus("-1");
+
                 // todo 并行调用
                 Yaml yaml = new Yaml();
-                Map<String, Object> ymlMap = yaml.load(canalAdapterConfig.getContent());
-                if (ymlMap.get("destination") == null) return;
+                Map<String, Object> ymlMap;
+                try {
+                    ymlMap = yaml.load(canalAdapterConfig.getContent());
+                } catch (Exception e) {
+                    logger.warn("配置文件格式错误", e);
+                    return;
+                }
+                if (ymlMap == null || ymlMap.get("destination") == null) return;
 
                 String destination = String.valueOf(ymlMap.get("destination"));
                 List<NodeClient> nodeClients;
                 if (canalAdapterConfig.getClusterId() != null) {
                     // cluster
                     nodeClients = NodeClient.find.query()
-                            .where()
-                            .eq("clusterId", canalAdapterConfig.getClusterId())
-                            .findList();
+                        .where()
+                        .eq("clusterId", canalAdapterConfig.getClusterId())
+                        .findList();
                 } else {
                     // single
                     nodeClients = Collections.singletonList(canalAdapterConfig.getNodeClient());
                 }
 
-                // 默认为断开状态
-                canalAdapterConfig.setRunningStatus("-1");
                 for (NodeClient nodeClient : nodeClients) {
                     String url = MessageFormat.format("http://{0}:{1}", nodeClient.getIp(), nodeClient.getPort());
                     try {
@@ -85,62 +96,13 @@ public class CanalAdapterServiceImpl implements CanalAdapterService {
                         canalAdapterConfig.setRunningStatus("on".equals(result.get("status")) ? "1" : "0");
                         break;
                     } catch (Exception e) {
-                        logger.warn(e.getMessage(), e);
+                        logger.warn("client ip 、port配置错误或无法连接client", e);
                     }
                 }
             }
         });
 
         return pager;
-    }
-
-    /**
-     * 通过Server id获取当前Server下所有运行的Instance
-     *
-     * @param serverId server id
-     */
-    @Override
-    public List<CanalInstanceConfig> findActiveInstanceByServerId(Long serverId) {
-        NodeServer nodeServer = NodeServer.find.byId(serverId);
-        if (nodeServer == null) {
-            return null;
-        }
-        String runningInstances = SimpleAdminConnectors
-            .execute(nodeServer.getIp(), nodeServer.getAdminPort(), AdminConnector::getRunningInstances);
-        if (runningInstances == null) {
-            return null;
-        }
-
-        String[] instances = runningInstances.split(",");
-        Object obj[] = Lists.newArrayList(instances).toArray();
-        // 单机模式和集群模式区分处理
-        if (nodeServer.getClusterId() != null) { // 集群模式
-            List<CanalInstanceConfig> list = CanalInstanceConfig.find.query()
-                .setDisableLazyLoading(true)
-                .select("clusterId, serverId, name, modifiedTime")
-                .where()
-                // 暂停的实例也显示 .eq("status", "1")
-                .in("name", obj)
-                .findList();
-            list.forEach(config -> config.setRunningStatus("1"));
-            return list; // 集群模式直接返回当前运行的Instances
-        } else { // 单机模式
-            // 当前Server所配置的所有Instance
-            List<CanalInstanceConfig> list = CanalInstanceConfig.find.query()
-                .setDisableLazyLoading(true)
-                .select("clusterId, serverId, name, modifiedTime")
-                .where()
-                // 暂停的实例也显示 .eq("status", "1")
-                .eq("serverId", serverId)
-                .findList();
-            List<String> instanceList = Arrays.asList(instances);
-            list.forEach(config -> {
-                if (instanceList.contains(config.getName())) {
-                    config.setRunningStatus("1");
-                }
-            });
-            return list;
-        }
     }
 
     @Override
@@ -157,6 +119,17 @@ public class CanalAdapterServiceImpl implements CanalAdapterService {
         }
 
         canalAdapterConfig.insert();
+    }
+
+    @Override
+    public void batchSave(List<CanalAdapterConfig> canalAdapterConfigs) {
+        for (CanalAdapterConfig canalAdapterConfig : canalAdapterConfigs) {
+            String content = processTemplate(canalAdapterConfig);
+            canalAdapterConfig.setContent(content);
+
+            // todo 批量保存
+            save(canalAdapterConfig);
+        }
     }
 
     @Override
@@ -274,6 +247,11 @@ public class CanalAdapterServiceImpl implements CanalAdapterService {
         return true;
     }
 
+    @Override
+    public String previewTemplate(CanalAdapterConfig canalAdapterConfig) {
+        return processTemplate(canalAdapterConfig);
+    }
+
     private Query<CanalAdapterConfig> getBaseQuery(CanalAdapterConfig canalAdapterConfig) {
         Query<CanalAdapterConfig> query = CanalAdapterConfig.find.query();
         if (StringUtils.isNotBlank(canalAdapterConfig.getName())) {
@@ -281,5 +259,17 @@ public class CanalAdapterServiceImpl implements CanalAdapterService {
         }
 
         return query;
+    }
+
+    private String processTemplate(CanalAdapterConfig canalAdapterConfig) {
+        String template = canalAdapterConfig.getContent();
+        Context context = new Context();
+        String[] dbTable = StringUtils.removeEnd(canalAdapterConfig.getName(), ".yml").split("::");
+        Map<String, String> dbMapping = new HashMap<>();
+        dbMapping.put("database", dbTable[0]);
+        dbMapping.put("table", dbTable[1]);
+        dbMapping.put("targetTable", dbTable[1]);
+        context.setVariable("dbMapping", dbMapping);
+        return dynamicTemplateEngine.process(template, context);
     }
 }

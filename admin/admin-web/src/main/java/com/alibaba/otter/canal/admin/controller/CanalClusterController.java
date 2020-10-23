@@ -122,7 +122,7 @@ public class CanalClusterController {
         servers.forEach(server -> {
             JSONObject item = new JSONObject();
             item.put("label", server.getName());
-            item.put("value", "server:" + server.getId());
+            item.put("value", "client:" + server.getId());
             jsonArray2.add(item);
         });
         group2.put("options", jsonArray2);

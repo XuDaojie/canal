@@ -104,7 +104,7 @@
             {{ scope.row.name }}
           </template>
         </el-table-column>
-        <el-table-column label="状态11" min-width="200" align="center">
+        <el-table-column label="状态" min-width="200" align="center">
           <template slot-scope="scope">
             <el-tag :type="scope.row.runningStatus | statusFilter">{{ scope.row.runningStatus | statusLabel }}</el-tag>
           </template>

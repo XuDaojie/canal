@@ -5,6 +5,7 @@
       <el-button class="filter-item" type="primary" icon="el-icon-search" plain @click="queryData()">查询</el-button>
       &nbsp;&nbsp;
       <el-button class="filter-item" type="primary" @click="handleCreate()">新建 Adapter</el-button>
+      <el-button class="filter-item" type="primary" @click="batchCreate()">批量新建 Adapter</el-button>
       <el-button class="filter-item" type="info" @click="fetchData()">刷新列表</el-button>
     </div>
     <el-table
@@ -211,6 +212,9 @@ export default {
           }
         })
       })
+    },
+    batchCreate() {
+      this.$router.push('/canalClient/canalAdapter/batchBuild')
     }
   }
 }
