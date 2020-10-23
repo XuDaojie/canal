@@ -139,7 +139,7 @@ public class CanalAdapterServiceImpl implements CanalAdapterService {
             if (canalAdapterConfig.getClusterId() != null) {
                 canalAdapterConfig.setClusterClientId("cluster:" + canalAdapterConfig.getClusterId());
             } else if (canalAdapterConfig.getClientId() != null) {
-                canalAdapterConfig.setClusterClientId("server:" + canalAdapterConfig.getClientId());
+                canalAdapterConfig.setClusterClientId("client:" + canalAdapterConfig.getClientId());
             }
         }
         return canalAdapterConfig;
