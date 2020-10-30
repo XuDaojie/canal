@@ -3,7 +3,6 @@ package com.alibaba.otter.canal.admin.controller;
 import com.alibaba.otter.canal.admin.common.TemplateConfigLoader;
 import com.alibaba.otter.canal.admin.model.BaseModel;
 import com.alibaba.otter.canal.admin.model.CanalConfig;
-import com.alibaba.otter.canal.admin.model.Pager;
 import com.alibaba.otter.canal.admin.service.CanalConfigService;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,19 +52,6 @@ public class CanalConfigController {
                                               @PathVariable String env) {
         canalConfigService.save(canalConfig);
         return BaseModel.getInstance("success");
-    }
-
-    /**
-     * 获取canal-client配置列表
-     *
-     * @param env 环境变量
-     * @return 配置信息
-     */
-    @GetMapping(value = "/configs/client")
-    public BaseModel<Pager<?>> canalClientConfig(CanalConfig canalConfig,
-                                                Pager<CanalConfig> pager,
-                                                @PathVariable String env) {
-        return BaseModel.getInstance(canalConfigService.findClientList(pager));
     }
 
     /**

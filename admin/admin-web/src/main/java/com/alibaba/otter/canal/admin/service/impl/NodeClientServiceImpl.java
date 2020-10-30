@@ -117,29 +117,6 @@ public class NodeClientServiceImpl implements NodeClientService {
                 .findList();
         pager.setItems(nodeClients);
 
-        if (nodeClients.isEmpty()) {
-            return pager;
-        }
-
-//        List<Future<Boolean>> futures = new ArrayList<>(nodeClients.size());
-//        // todo get all nodes status
-//        for (NodeClient ns : nodeClients) {
-//            futures.add(Threads.executorService.submit(() -> {
-//                boolean status = SimpleAdminConnectors.execute(ns.getIp(), ns.getAdminPort(), AdminConnector::check);
-//                ns.setStatus(status ? "1" : "0");
-//                return !status;
-//            }));
-//        }
-//        for (Future<Boolean> f : futures) {
-//            try {
-//                f.get(3, TimeUnit.SECONDS);
-//            } catch (InterruptedException | ExecutionException e) {
-//                // ignore
-//            } catch (TimeoutException e) {
-//                break;
-//            }
-//        }
-
         return pager;
     }
 

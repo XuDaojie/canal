@@ -2,8 +2,16 @@
   <div>
     <el-form ref="form" :model="form">
       <div class="filter-container" style="padding-left: 10px;padding-top: 20px;">
-        <el-input v-model="form.name" placeholder="Adapter 名称" style="width: 200px;" class="filter-item" />
-        <el-input v-model="form.category" placeholder="Adapter 种类" style="width: 200px;" class="filter-item" />
+        <el-input v-model="form.name" placeholder="Adapter 名称" style="width: 200px;" class="filter-item-input" >
+          <template slot="append">.yml</template>
+        </el-input>
+        <el-select v-model="form.category" placeholder="请选择 Adapter 种类" class="filter-item">
+          <el-option key="hbase" label="HBase" value="hbase" />
+          <el-option key="rdb" label="RDB" value="rdb" />
+          <el-option key="es6x" label="Elastic Search 6.x" value="es6x" />
+          <el-option key="es7x" label="Elastic Search 7.x" value="es7x" />
+          <el-option key="kudu" label="Apache Kudu" value="kudu" />
+        </el-select>
         <el-select v-model="form.clusterClientId" placeholder="所属主机" class="filter-item">
           <el-option-group v-for="group in options" :key="group.label" :label="group.label">
             <el-option v-for="item in group.options" :key="item.value" :label="item.label" :value="item.value" />
@@ -114,7 +122,7 @@ export default {
       getTemplateAdapter(this.form).then(res => {
         if (res.data === null || res.data === '') {
           this.$message({
-            message: '未找到此种类模版',
+            message: '未找到预留模版，请自行编辑',
             type: 'error'
           })
         }

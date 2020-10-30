@@ -19,10 +19,15 @@ import org.thymeleaf.context.Context;
 import org.yaml.snakeyaml.Yaml;
 
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
 import javax.annotation.Resource;
@@ -57,50 +62,65 @@ public class CanalAdapterServiceImpl implements CanalAdapterService {
             .setMaxRows(pager.getSize())
             .findList();
         pager.setItems(canalAdapterConfigs);
+
+        List<CompletableFuture<Void>> futures = new ArrayList<>(pager.getSize());
         pager.getItems().forEach(new Consumer<CanalAdapterConfig>() {
 
             @Override
             public void accept(CanalAdapterConfig canalAdapterConfig) {
-                // 默认为断开状态
-                canalAdapterConfig.setRunningStatus("-1");
+                CompletableFuture<Void> future = CompletableFuture.runAsync(new Runnable() {
+                    @Override
+                    public void run() {
+                        // 默认为断开状态
+                        canalAdapterConfig.setRunningStatus("-1");
 
-                // todo 并行调用
-                Yaml yaml = new Yaml();
-                Map<String, Object> ymlMap;
-                try {
-                    ymlMap = yaml.load(canalAdapterConfig.getContent());
-                } catch (Exception e) {
-                    logger.warn("配置文件格式错误", e);
-                    return;
-                }
-                if (ymlMap == null || ymlMap.get("destination") == null) return;
+                        Yaml yaml = new Yaml();
+                        Map<String, Object> ymlMap;
+                        try {
+                            ymlMap = yaml.load(canalAdapterConfig.getContent());
+                        } catch (Exception e) {
+                            logger.warn("配置文件格式错误", e);
+                            return;
+                        }
+                        if (ymlMap == null || ymlMap.get("destination") == null) return;
 
-                String destination = String.valueOf(ymlMap.get("destination"));
-                List<NodeClient> nodeClients;
-                if (canalAdapterConfig.getClusterId() != null) {
-                    // cluster
-                    nodeClients = NodeClient.find.query()
-                        .where()
-                        .eq("clusterId", canalAdapterConfig.getClusterId())
-                        .findList();
-                } else {
-                    // single
-                    nodeClients = Collections.singletonList(canalAdapterConfig.getNodeClient());
-                }
+                        String destination = String.valueOf(ymlMap.get("destination"));
+                        List<NodeClient> nodeClients;
+                        if (canalAdapterConfig.getClusterId() != null) {
+                            // cluster
+                            nodeClients = NodeClient.find.query()
+                                    .where()
+                                    .eq("clusterId", canalAdapterConfig.getClusterId())
+                                    .findList();
+                        } else {
+                            // single
+                            nodeClients = Collections.singletonList(canalAdapterConfig.getNodeClient());
+                        }
 
-                for (NodeClient nodeClient : nodeClients) {
-                    String url = MessageFormat.format("http://{0}:{1}", nodeClient.getIp(), nodeClient.getPort());
-                    try {
-                        ClientAdapterApi api = ClientAdapterApi.apis.get(url);
-                        Map<String, String> result = api.syncSwitch(destination);
-                        canalAdapterConfig.setRunningStatus("on".equals(result.get("status")) ? "1" : "0");
-                        break;
-                    } catch (Exception e) {
-                        logger.warn("client ip 、port配置错误或无法连接client", e);
+                        // todo 并行调用
+                        for (NodeClient nodeClient : nodeClients) {
+                            String url = MessageFormat.format("http://{0}:{1}", nodeClient.getIp(), nodeClient.getPort());
+                            try {
+                                ClientAdapterApi api = ClientAdapterApi.apis.get(url);
+                                Map<String, String> result = api.syncSwitch(destination);
+                                canalAdapterConfig.setRunningStatus("on".equals(result.get("status")) ? "1" : "0");
+                                break;
+                            } catch (Exception e) {
+                                logger.warn("client ip 、port配置错误或无法连接client", e);
+                            }
+                        }
                     }
-                }
+                });
+                futures.add(future);
             }
         });
+        for (CompletableFuture<Void> future: futures) {
+            try {
+                future.get(3, TimeUnit.SECONDS);
+            } catch (InterruptedException | ExecutionException | TimeoutException e) {
+                logger.error(e.getMessage(), e);
+            }
+        }
 
         return pager;
     }
@@ -116,6 +136,11 @@ public class CanalAdapterServiceImpl implements CanalAdapterService {
         } else if (canalAdapterConfig.getClusterClientId().startsWith("client:")) {
             Long serverId = Long.parseLong(canalAdapterConfig.getClusterClientId().substring(7));
             canalAdapterConfig.setClientId(serverId);
+        }
+
+        String name = canalAdapterConfig.getName();
+        if (!StringUtils.endsWith(name, ".yml")) {
+            canalAdapterConfig.setName(name + ".yml");
         }
 
         canalAdapterConfig.insert();
@@ -268,8 +293,7 @@ public class CanalAdapterServiceImpl implements CanalAdapterService {
         Map<String, String> dbMapping = new HashMap<>();
         dbMapping.put("database", dbTable[0]);
         dbMapping.put("table", dbTable[1]);
-        dbMapping.put("targetTable", dbTable[1]);
-        context.setVariable("dbMapping", dbMapping);
+        context.setVariable("mapping", dbMapping);
         return dynamicTemplateEngine.process(template, context);
     }
 }

@@ -9,10 +9,17 @@
       <el-select v-model="listQuery.schema" placeholder="schemas" class="filter-item" @change="queryData()">
         <el-option v-for="item in schemas" :key="item.schemaName" :label="item.schemaName" :value="item.schemaName" />
       </el-select>
-      <el-input v-model="form.category" placeholder="Adapter 种类" style="width: 200px;" class="filter-item" />
+      <el-select v-model="form.category" placeholder="请选择 Adapter 种类" class="filter-item">
+        <el-option key="hbase" label="HBase" value="hbase" />
+        <el-option key="rdb" label="RDB" value="rdb" />
+        <el-option key="es6x" label="Elastic Search 6.x" value="es6x" />
+        <el-option key="es7x" label="Elastic Search 7.x" value="es7x" />
+        <el-option key="kudu" label="Apache Kudu" value="kudu" />
+      </el-select>
       <el-button class="filter-item" type="primary" @click="handleTemplate()">编辑模板</el-button>
       <el-button class="filter-item" type="primary" @click="dialogTipVisible = true">保存</el-button>
       <el-button class="filter-item" type="info" @click="fetchData()">刷新列表</el-button>
+      <el-button class="filter-item" type="info" @click="onBack">返回</el-button>
     </div>
     <el-table
       ref="multipleTable"
@@ -199,6 +206,12 @@ export default {
         category: this.form.category
       }
       getTemplateEngineAdapter(params).then(res => {
+        if (res.data === null || res.data === '') {
+          this.$message({
+            message: '未找到预留模版，请自行编辑',
+            type: 'error'
+          })
+        }
         this.form.content = res.data
       })
     },
@@ -216,7 +229,10 @@ export default {
       previewTemplateEngineAdapter(body).then( res => {
         this.previewContent = res.data
       })
-    }
+    },
+    onBack() {
+      history.go(-1)
+    },
   }
 }
 </script>

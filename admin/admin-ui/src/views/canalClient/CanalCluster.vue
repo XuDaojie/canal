@@ -24,6 +24,11 @@
           <span>{{ scope.row.zkHosts }}</span>
         </template>
       </el-table-column>
+      <el-table-column label="修改时间" min-width="300" align="center">
+        <template slot-scope="scope">
+          <span>{{ scope.row.modifiedTime }}</span>
+        </template>
+      </el-table-column>
       <el-table-column align="center" prop="created_at" label="操作" min-width="150">
         <template slot-scope="scope">
           <el-dropdown trigger="click">

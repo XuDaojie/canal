@@ -9,7 +9,7 @@ hbaseMapping:                       # mysql--HBase的单表映射配置
   family: CF                        # 默认统一Column Family名称
   uppercaseQualifier: true          # 字段名转大写, 默认为true
   commitBatch: 3000                 # 批量提交的大小, ETL中用到
-    #rowKey: id,type                  # 复合字段rowKey不能和columns中的rowKey并存
+#  rowKey: id,type                  # 复合字段rowKey不能和columns中的rowKey并存
   # 复合rowKey会以 '|' 分隔
   columns:                          # 字段映射, 如果不配置将自动映射所有字段,
     # 并取第一个字段为rowKey, HBase字段名以mysql字段名为主
